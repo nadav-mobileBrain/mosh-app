@@ -15,12 +15,7 @@ function App() {
          <p className="p-4 text-4xl text-center font-bold underline">
             {message}
          </p>
-         <Button>Click me</Button>
-         <Button variant="destructive">Click me</Button>
-         <Button variant="outline">Click me</Button>
-         <Button variant="secondary">Click me</Button>
-         <Button variant="ghost">Click me</Button>
-         <Button variant="link">Click me</Button>
+         <Button>Click me!</Button>
       </div>
    );
 }
