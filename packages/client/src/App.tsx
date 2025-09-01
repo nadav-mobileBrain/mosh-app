@@ -10,9 +10,7 @@ function App() {
   }, []);
 
   return (
-    <div>
-      <h1>{message}</h1>
-    </div>
+    <p className="p-4 text-4xl text-center font-bold underline">{message}</p>
   );
 }
 
