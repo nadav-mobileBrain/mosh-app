@@ -1,10 +1,7 @@
-import { type Review, type Summary } from '../generated/prisma';
-import OpenAI from 'openai';
+import { type Review } from '../generated/prisma';
 import { reviewRepository } from '../repositories/review.repository';
-
-const client = new OpenAI({
-   apiKey: process.env.OPENAI_API_KEY,
-});
+import { llmClient } from '../llm/client';
+import template from '../prompts/summarize-review.txt';
 
 export const reviewService = {
    async getReviews(productId: number): Promise<Review[]> {
@@ -12,21 +9,25 @@ export const reviewService = {
    },
 
    async summarizeReviews(productId: number): Promise<string> {
+      const existingSummary =
+         await reviewRepository.getReviewSummary(productId);
+      if (existingSummary && existingSummary.expiresAt > new Date()) {
+         return existingSummary.content;
+      }
       const reviews = await reviewRepository.getReviews(productId, 10);
       const joinedReviews = reviews
          .map((review) => review.content)
          .join('\n\n');
 
-      const prompt = `Summarize the following customer reviews into a short paragraph highlighting the key themes , both positive and negative:
-      
-      ${joinedReviews}`;
+      const prompt = template.replace('{{reviews}}', joinedReviews);
 
-      const response = await client.responses.create({
+      const { text: summary } = await llmClient.generateText({
          model: 'gpt-4.1',
-         input: prompt,
+         prompt,
          temperature: 0.2,
-         max_output_tokens: 500,
+         maxTokens: 500,
       });
-      return response.output_text;
+      await reviewRepository.storeReviewSummaries(productId, summary);
+      return summary;
    },
 };
