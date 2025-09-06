@@ -1,6 +1,5 @@
 import { reviewRepository } from '../repositories/review.repository';
 import { llmClient } from '../llm/client';
-import template from '../prompts/summarize-review.txt';
 
 export const reviewService = {
    async summarizeReviews(productId: number): Promise<string> {
@@ -14,14 +13,7 @@ export const reviewService = {
          .map((review) => review.content)
          .join('\n\n');
 
-      const prompt = template.replace('{{reviews}}', joinedReviews);
-
-      const { text: summary } = await llmClient.generateText({
-         model: 'gpt-4.1',
-         prompt,
-         temperature: 0.2,
-         maxTokens: 500,
-      });
+      const summary = await llmClient.summarizeReviews(joinedReviews);
       await reviewRepository.storeReviewSummaries(productId, summary);
       return summary;
    },
